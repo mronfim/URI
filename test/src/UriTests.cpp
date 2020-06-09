@@ -140,7 +140,7 @@ TEST(UriTests, ParseFromStringEndsAfterAuthority) {
 TEST(UriTests, ParseFromStringRelativeVsNonRelativeReferences) {
     struct TestVector {
         std::string uriString;
-        bool isRelative;
+        bool isRelativeReference;
     };
 
     const std::vector<TestVector> testVectors{
@@ -157,7 +157,38 @@ TEST(UriTests, ParseFromStringRelativeVsNonRelativeReferences) {
         Uri::Uri uri;
     
         ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.isRelative, uri.IsRelativeReference()) << index;
+        ASSERT_EQ(testVector.isRelativeReference, uri.IsRelativeReference()) << index;
+        ++index;
+    }
+}
+
+TEST(UriTests, ParseFromStringRelativeVsNonRelativePaths) {
+    struct TestVector {
+        std::string uriString;
+        bool isRelativePath;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"http://example.com/", false},
+        {"http://example.com", true},
+        {"/", false}, // absolute-path reference
+        {"//example.com", true}, // network-path reference
+        {"/foo", false}, // absolute-path reference
+        {"foo/", true}, // relative-path reference
+        /*
+         * This is only a valid test vector if we understand
+         * correctly that an empty string IS a valid
+         * "relative reference" URI with an empty path.
+         */
+        {"", true},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
+        ASSERT_EQ(testVector.isRelativePath, uri.ContainsRelativePath()) << index;
         ++index;
     }
 }

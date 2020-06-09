@@ -109,14 +109,24 @@ namespace Uri
         uint16_t GetPort() const;
 
         /**
-         * This methos returns an indication of whether or not the
-         * URI has a relative path.
+         * This method returns an indication of whether or not the
+         * URI is a relative reference.
          *
          * @return
          *      An indication of whether or not the
-         *      URI has a relative path is returned.
+         *      URI is a relative reference is returned.
          */
         bool IsRelativeReference() const;
+
+        /**
+         * This method returns an indication of whether or not the
+         * URI contains a relative path.
+         *
+         * @return
+         *      An indication of whether or not the
+         *      URI constains a relative path is returned.
+         */
+        bool ContainsRelativePath() const;
 
         // private properties
     private:
@@ -131,6 +141,67 @@ namespace Uri
          * This contains the private properties of the instance.
          */
         std::unique_ptr<struct Impl>impl_;
+
+        // private methods
+    private:
+        /**
+         * This method parses the "scheme" part of the URI, returning the
+         * scheme as a string, and sets nextIdx to the beginning of the next
+         * part of the URI.
+         *
+         * @param[in] uri
+         *      The string rendering of the URI
+         *
+         * @param[in] nextIdx
+         *      A reference to store the index of the beginning of the next
+         *      part of the URI.
+         *
+         * @return
+         *      A string representation of the scheme is returned.
+         *
+         * @note
+         *      An empty string is returned if there is no scheme.
+         */
+        std::string parseScheme(const std::string& uri, size_t& nextIdx);
+
+        /**
+         * This method parses the "authority" part of the URI. If the URI has
+         * an authority, it will start with the characters "//" and it will end
+         * with a "/", "?", "#", or by the end of the URI.
+         *
+         * @param[in] uri
+         *      The string rendering of the URI
+         *
+         * @param[in] nextIdx
+         *      A reference to store the index of the beginning of the next
+         *      part of the URI.
+         *
+         * @return
+         *      A string representation of the authority is returned.
+         *
+         * @note
+         *      An empty string is returned if there is no scheme.
+         */
+        std::string parseAuthority(const std::string& uri, size_t& nextIdx);
+
+        /**
+         * This method parses the different components that can be present
+         * in the authority of an URI. These componenets include userinfo,
+         * host, and port number.
+         *        authority   = [ userinfo "@" ] host [ ":" port ]
+         * 
+         * @param[in]
+         *      A string rendering of the authority part of a URI.
+         *
+         * @return
+         *      An indication of whether the authority is valid or not
+         *      is returned.
+         *
+         * @note
+         *      These components are not returned, they are directly set
+         *      in the implementation instance.
+         */
+        bool parseAuthorityComponents(const std::string& authority);
     };
 }
 

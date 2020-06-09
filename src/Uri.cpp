@@ -54,50 +54,16 @@ namespace Uri
     bool Uri::ParseFromString(const std::string& uriString)
     {
         // First parse the scheme.
-        const auto schemeEnd = uriString.find(':');
-        if (schemeEnd == std::string::npos) {
+        size_t nextIdx;
+        impl_->scheme = parseScheme(uriString, nextIdx);
+        auto rest = uriString.substr(nextIdx);
 
+        // Next, parse the userinfo, host, and port number.
+        std::string authority = parseAuthority(rest, nextIdx);
+        if (!parseAuthorityComponents(authority)) {
+            return false;
         }
-        impl_->scheme = uriString.substr(0, schemeEnd);
-        auto rest = uriString.substr(schemeEnd + 1);
-
-        // Next, parse the host.
-        impl_->hasPort = false;
-        if (rest.substr(0, 2) == "//") {
-            auto authorityEnd = rest.find('/', 2);
-            if (authorityEnd == std::string::npos) {
-                authorityEnd = rest.length();
-            }
-
-            const auto authority = rest.substr(2, authorityEnd - 2);
-            const auto portDelimiter = authority.find(':');
-            if (portDelimiter == std::string::npos) {
-                impl_->host = authority;
-            }
-            else {
-                impl_->host = authority.substr(0, portDelimiter);
-
-                uint32_t newPort = 0;
-                for (auto c : authority.substr(portDelimiter + 1)) {
-                    if (c < '0' || c > '9') {
-                        return false;
-                    }
-                    newPort *= 10;
-                    newPort += (uint16_t)(c - '0');
-                    if ((newPort & ~((1 << 16) - 1)) != 0) {
-                        return false;
-                    }
-                }
-
-                impl_->port = (uint16_t)newPort;
-                impl_->hasPort = true;
-            }
-
-            rest = rest.substr(authorityEnd);
-        }
-        else {
-            impl_->host.clear();
-        }
+        rest = rest.substr(nextIdx);
 
         // Finally, parse the path.
         impl_->path.clear();
@@ -154,6 +120,107 @@ namespace Uri
     bool Uri::IsRelativeReference() const
     {
         return impl_->scheme.empty();
+    }
+
+    bool Uri::ContainsRelativePath() const
+    {
+        if (impl_->path.empty()) {
+            return true;
+        }
+        else {
+            return !impl_->path[0].empty();
+        }
+    }
+
+    std::string Uri::parseScheme(const std::string& uri, size_t& nextIdx)
+    {
+        const auto schemeEnd = uri.find(":");
+        if (schemeEnd == std::string::npos) {
+            nextIdx = 0;
+            return "";
+        }
+
+        // Check if there is a dot-segment before the presumed scheme delimiter.
+        const auto dotSegment = uri.find("./");
+        if (dotSegment != std::string::npos && dotSegment < schemeEnd) {
+            nextIdx = 0;
+            return "";
+        }
+
+        nextIdx = schemeEnd + 1;
+        return uri.substr(0, schemeEnd);
+    }
+
+    std::string Uri::parseAuthority(const std::string& uri, size_t& nextIdx)
+    {
+        const auto doubleForwardSlash = uri.find("//");
+        if (doubleForwardSlash == std::string::npos) {
+            // if there is no "//", then there is no authority
+            nextIdx = 0;
+            return "";
+        }
+
+        // Check if there is a forward slash before the double forward slash.
+        const auto dotSegment = uri.find("/");
+        if (dotSegment != std::string::npos && dotSegment < doubleForwardSlash) {
+            // The authority needs to come before the path
+            nextIdx = 0;
+            return "";
+        }
+
+        const std::vector<std::string> authorityEndings{ "/", "?", "#" };
+        size_t authorityEnd = std::string::npos;
+        for (std::string s : authorityEndings) {
+            size_t idx = uri.find(s, doubleForwardSlash + 2);
+            if (idx < authorityEnd) {
+                authorityEnd = idx;
+            }
+        }
+
+        if (authorityEnd == std::string::npos) {
+            authorityEnd = uri.length();
+        }
+
+        nextIdx = authorityEnd;
+        return uri.substr(doubleForwardSlash + 2, authorityEnd - 2);
+    }
+
+    bool Uri::parseAuthorityComponents(const std::string& authority)
+    {
+        impl_->host.clear();
+        impl_->port = 0;
+        impl_->hasPort = false;
+
+        size_t nextIdx = 0;
+        const auto userinfoDelim = authority.find("@");
+        if (userinfoDelim != std::string::npos) {
+            // TODO: set userinfo
+            nextIdx = userinfoDelim + 1;
+        }
+
+        const auto portDelim = authority.find(":", nextIdx);
+        if (portDelim != std::string::npos) {
+            uint32_t newPort = 0;
+            for (auto c : authority.substr(portDelim + 1)) {
+                if (c < '0' || c > '9') {
+                    return false;
+                }
+                newPort *= 10;
+                newPort += (uint16_t)(c - '0');
+                if ((newPort & ~((1 << 16) - 1)) != 0) {
+                    return false;
+                }
+            }
+
+            impl_->port = (uint16_t)newPort;
+            impl_->hasPort = true;
+            impl_->host = authority.substr(nextIdx, portDelim - nextIdx);
+        }
+        else {
+            impl_->host = authority.substr(nextIdx);
+        }
+
+        return true;
     }
     
 }
