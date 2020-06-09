@@ -192,3 +192,51 @@ TEST(UriTests, ParseFromStringRelativeVsNonRelativePaths) {
         ++index;
     }
 }
+
+TEST(UriTests, ParseFromStringFragments) {
+    struct TestVector {
+        std::string uriString;
+        std::string fragment;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"http://example.com/", ""},
+        {"http://example.com?foo", ""},
+        {"http://example.com#foo", "foo"},
+        {"http://example.com/foo?bar", ""},
+        {"http://example.com/foo?bar#frag", "frag"},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
+        ASSERT_EQ(testVector.fragment, uri.GetFragment()) << index;
+        ++index;
+    }
+}
+
+TEST(UriTests, ParseFromStringQuery) {
+    struct TestVector {
+        std::string uriString;
+        std::string query;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"http://example.com/", ""},
+        {"http://example.com?foo", "foo"},
+        {"http://example.com#foo", ""},
+        {"http://example.com/foo?bar=zzz", "bar=zzz"},
+        {"http://example.com/foo?bar#frag", "bar"},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
+        ASSERT_EQ(testVector.query, uri.GetQuery()) << index;
+        ++index;
+    }
+}

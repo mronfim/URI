@@ -50,7 +50,7 @@ namespace Uri
         bool ParseFromString(const std::string& uriString);
 
         /**
-         * This methos returns the "scheme" element of the URI.
+         * This method returns the "scheme" element of the URI.
          *
          * @return
          *      The "scheme" element of the URI is returned.
@@ -61,7 +61,7 @@ namespace Uri
         std::string GetScheme() const;
 
         /**
-         * This methos returns the "host" element of the URI.
+         * This method returns the "host" element of the URI.
          *
          * @return
          *      The "host" element of the URI is returned.
@@ -128,6 +128,28 @@ namespace Uri
          */
         bool ContainsRelativePath() const;
 
+        /**
+         * This method returns the "query" element of the URI.
+         *
+         * @return
+         *      The "query" element of the URI is returned.
+         *
+         * @retval ""
+         *      This is returned if there is no "query" element in the URI.
+         */
+        std::string GetQuery() const;
+
+        /**
+         * This method returns the "fragment" element of the URI.
+         *
+         * @return
+         *      The "fragment" element of the URI is returned.
+         *
+         * @retval ""
+         *      This is returned if there is no "fragment" element in the URI.
+         */
+        std::string GetFragment() const;
+
         // private properties
     private:
         /**
@@ -159,8 +181,8 @@ namespace Uri
          * @return
          *      A string representation of the scheme is returned.
          *
-         * @note
-         *      An empty string is returned if there is no scheme.
+         * @retval ""
+         *      This is returned if there is no scheme.
          */
         std::string parseScheme(const std::string& uri, size_t& nextIdx);
 
@@ -179,8 +201,8 @@ namespace Uri
          * @return
          *      A string representation of the authority is returned.
          *
-         * @note
-         *      An empty string is returned if there is no scheme.
+         * @retval ""
+         *      This is returned if there is no authority.
          */
         std::string parseAuthority(const std::string& uri, size_t& nextIdx);
 

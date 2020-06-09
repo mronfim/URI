@@ -42,6 +42,16 @@ namespace Uri
          * as a sequence of segments.
          */
         std::vector<std::string> path;
+
+        /**
+         * This is the "query" element of the URI.
+         */
+        std::string query;
+
+        /**
+         * This is the "fragment" element of the URI.
+         */
+        std::string fragment;
     };
 
     Uri::~Uri() = default;
@@ -65,12 +75,29 @@ namespace Uri
         }
         rest = rest.substr(nextIdx);
 
-        // Finally, parse the path.
+        // Next, parse the fragment if there is one.
+        impl_->fragment.clear();
+        const auto fragment = rest.find('#');
+        if (fragment != std::string::npos) {
+            impl_->fragment = rest.substr(fragment + 1);
+            rest = rest.substr(0, fragment);
+        }
+
+        // Then, parse the query string.
+        impl_->query.clear();
+        const auto query = rest.find('?');
+        if (query != std::string::npos) {
+            impl_->query = rest.substr(query + 1);
+            rest = rest.substr(0, query);
+        }
+
+        // Then, parse the path.
         impl_->path.clear();
         if (rest == "/") {
             // Special case of a path that is empty but needs a single
             // empty string element to indicate that it is absolute.
             impl_->path.push_back("");
+            rest.clear();
         }
         else if (!rest.empty()) {
             for (;;) {
@@ -132,6 +159,16 @@ namespace Uri
         }
     }
 
+    std::string Uri::GetQuery() const
+    {
+        return impl_->query;
+    }
+
+    std::string Uri::GetFragment() const
+    {
+        return impl_->fragment;
+    }
+
     std::string Uri::parseScheme(const std::string& uri, size_t& nextIdx)
     {
         const auto schemeEnd = uri.find(":");
@@ -168,15 +205,7 @@ namespace Uri
             return "";
         }
 
-        const std::vector<std::string> authorityEndings{ "/", "?", "#" };
-        size_t authorityEnd = std::string::npos;
-        for (std::string s : authorityEndings) {
-            size_t idx = uri.find(s, doubleForwardSlash + 2);
-            if (idx < authorityEnd) {
-                authorityEnd = idx;
-            }
-        }
-
+        auto authorityEnd = uri.find_first_of("/?#", doubleForwardSlash + 2);
         if (authorityEnd == std::string::npos) {
             authorityEnd = uri.length();
         }
