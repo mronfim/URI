@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <regex>
+#include <iostream>
 #include <Uri/Uri.h>
 
 namespace Uri
@@ -70,7 +72,11 @@ namespace Uri
     {
         // First parse the scheme.
         size_t nextIdx;
-        impl_->scheme = parseScheme(uriString, nextIdx);
+        std::string schemeString;
+        if (!parseScheme(uriString, schemeString, nextIdx)) {
+            return false;
+        }
+        impl_->scheme = schemeString;
         auto rest = uriString.substr(nextIdx);
 
         // Next, parse the userinfo, host, and port number.
@@ -179,23 +185,36 @@ namespace Uri
         return impl_->fragment;
     }
 
-    std::string Uri::parseScheme(const std::string& uri, size_t& nextIdx)
+    bool Uri::parseScheme(const std::string& uri, std::string& scheme, size_t& nextIdx)
     {
         const auto schemeEnd = uri.find(":");
         if (schemeEnd == std::string::npos) {
+            // There is no scheme
+            scheme = "";
             nextIdx = 0;
-            return "";
+            return true;
         }
 
         // Check if there is a dot-segment before the presumed scheme delimiter.
         const auto dotSegment = uri.find("./");
         if (dotSegment != std::string::npos && dotSegment < schemeEnd) {
+            // There is no scheme
+            scheme = "";
             nextIdx = 0;
-            return "";
+            return true;
         }
 
+        std::string schemeString = uri.substr(0, schemeEnd);
+
+        // Validate scheme string
+        std::regex re("^[A-Za-z][A-Za-z0-9\\+\\-\\.]*$");
+        if (!std::regex_match(schemeString, re)) {
+            return false;
+        }
+
+        scheme = schemeString;
         nextIdx = schemeEnd + 1;
-        return uri.substr(0, schemeEnd);
+        return true;
     }
 
     std::string Uri::parseAuthority(const std::string& uri, size_t& nextIdx)

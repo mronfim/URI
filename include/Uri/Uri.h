@@ -185,17 +185,25 @@ namespace Uri
          * @param[in] uri
          *      The string rendering of the URI
          *
+         * @param[out] scheme
+         *      A reference to store the scheme, if there is one and it is valid.
+         *
          * @param[out] nextIdx
          *      A reference to store the index of the beginning of the next
          *      part of the URI.
          *
          * @return
-         *      A string representation of the scheme is returned.
+         *      If there is a scheme, an idication of whether or not the scheme
+         *      is valid is returned.
          *
-         * @retval ""
-         *      This is returned if there is no scheme.
+         * @retval true
+         *      This is returned if there is no scheme, or if there is a scheme
+         *      and it is valid.
+         *
+         * @retval false
+         *      This is returned if there is a scheme and it is not valid.
          */
-        std::string parseScheme(const std::string& uri, size_t& nextIdx);
+        bool parseScheme(const std::string& uri, std::string& scheme, size_t& nextIdx);
 
         /**
          * This method parses the "authority" part of the URI. If the URI has

@@ -68,13 +68,11 @@ TEST(UriTests, ParseFromStringPathCornerCases) {
         {"/foo/", {"", "foo", ""}},
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.pathIn)) << index;
-        ASSERT_EQ(testVector.pathOut, uri.GetPath()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.pathIn)) << "URI: " << testVector.pathIn;
+        ASSERT_EQ(testVector.pathOut, uri.GetPath()) << "URI: " << testVector.pathIn;
     }
 }
 
@@ -153,13 +151,11 @@ TEST(UriTests, ParseFromStringRelativeVsNonRelativeReferences) {
         {"foo/", true}, // relative-path reference
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.isRelativeReference, uri.IsRelativeReference()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.isRelativeReference, uri.IsRelativeReference()) << "URI: " << testVector.uriString;
     }
 }
 
@@ -184,13 +180,11 @@ TEST(UriTests, ParseFromStringRelativeVsNonRelativePaths) {
         {"", true},
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.isRelativePath, uri.ContainsRelativePath()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.isRelativePath, uri.ContainsRelativePath()) << "URI: " << testVector.uriString;
     }
 }
 
@@ -208,13 +202,11 @@ TEST(UriTests, ParseFromStringFragments) {
         {"http://example.com/foo?bar#frag", "frag"},
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.fragment, uri.GetFragment()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.fragment, uri.GetFragment()) << "URI: " << testVector.uriString;
     }
 }
 
@@ -232,13 +224,11 @@ TEST(UriTests, ParseFromStringQuery) {
         {"http://example.com/foo?bar#frag", "bar"},
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.query, uri.GetQuery()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.query, uri.GetQuery()) << "URI: " << testVector.uriString;
     }
 }
 
@@ -284,4 +274,48 @@ TEST(UriTests, ParseFromStringTwiceFirstWithAuthorityThenWithout) {
     ASSERT_TRUE(uri.GetUserInfo().empty());
     ASSERT_TRUE(uri.GetHost().empty());
     ASSERT_FALSE(uri.HasPort());
+}
+
+TEST(UriTests, ParseFromStringSchemeIllegalCharacters) {
+    const std::vector<std::string> testVectors{
+        {"://www.example.com/"},
+        {"0://www.example.com/"},
+        {"+://www.example.com/"},
+        {"@://www.example.com/"},
+        {".://www.example.com/"},
+        {"h@://www.example.com/"},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_FALSE(uri.ParseFromString(testVector)) << "URI: " << testVector;
+        ++index;
+    }
+}
+
+TEST(UriTests, ParseFromStringSchemeBarelyLegal) {
+    struct TestVector {
+        std::string uriString;
+        std::string scheme;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"h://www.example.com/", "h"},
+        {"x+://www.example.com/", "x+"},
+        {"x-://www.example.com/", "x-"},
+        {"x.://www.example.com/", "x."},
+        {"zz://www.example.com/", "zz"},
+        {"y0://www.example.com/", "y0"},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.scheme, uri.GetScheme()) << "URI: " << testVector.uriString;
+        ++index;
+    }
 }
