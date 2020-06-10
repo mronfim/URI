@@ -65,6 +65,7 @@ TEST(UriTests, ParseFromStringPathCornerCases) {
         {"/", {""}},
         {"/foo", {"", "foo"}},
         {"foo/", {"foo", ""}},
+        {"/foo/", {"", "foo", ""}},
     };
 
     size_t index = 0;
@@ -265,4 +266,22 @@ TEST(UriTests, ParseFromStringUserInfo) {
         ASSERT_EQ(testVector.userInfo, uri.GetUserInfo()) << index;
         ++index;
     }
+}
+
+TEST(UriTests, ParseFromStringTwiceFirstWithUserInfoThenWithout) {
+    Uri::Uri uri;
+    
+    ASSERT_TRUE(uri.ParseFromString("http://joe@www.example.com/foo/bar"));
+    ASSERT_TRUE(uri.ParseFromString("http://www.example.com/foo/bar"));
+    ASSERT_TRUE(uri.GetUserInfo().empty());
+}
+
+TEST(UriTests, ParseFromStringTwiceFirstWithAuthorityThenWithout) {
+    Uri::Uri uri;
+    
+    ASSERT_TRUE(uri.ParseFromString("http://joe@www.example.com:8080/foo/bar"));
+    ASSERT_TRUE(uri.ParseFromString("/foo/bar"));
+    ASSERT_TRUE(uri.GetUserInfo().empty());
+    ASSERT_TRUE(uri.GetHost().empty());
+    ASSERT_FALSE(uri.HasPort());
 }

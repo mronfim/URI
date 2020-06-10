@@ -240,19 +240,19 @@ namespace Uri
 
         const auto portDelim = authority.find(":", nextIdx);
         if (portDelim != std::string::npos) {
-            uint32_t newPort = 0;
+            uint32_t port32bits = 0;
             for (auto c : authority.substr(portDelim + 1)) {
                 if (c < '0' || c > '9') {
                     return false;
                 }
-                newPort *= 10;
-                newPort += (uint16_t)(c - '0');
-                if ((newPort & ~((1 << 16) - 1)) != 0) {
+                port32bits *= 10;
+                port32bits += (uint16_t)(c - '0');
+                if ((port32bits & ~((1 << 16) - 1)) != 0) {
                     return false;
                 }
             }
 
-            impl_->port = (uint16_t)newPort;
+            impl_->port = (uint16_t)port32bits;
             impl_->hasPort = true;
             impl_->host = authority.substr(nextIdx, portDelim - nextIdx);
         }

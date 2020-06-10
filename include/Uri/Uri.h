@@ -185,7 +185,7 @@ namespace Uri
          * @param[in] uri
          *      The string rendering of the URI
          *
-         * @param[in] nextIdx
+         * @param[out] nextIdx
          *      A reference to store the index of the beginning of the next
          *      part of the URI.
          *
@@ -205,7 +205,7 @@ namespace Uri
          * @param[in] uri
          *      The string rendering of the URI
          *
-         * @param[in] nextIdx
+         * @param[out] nextIdx
          *      A reference to store the index of the beginning of the next
          *      part of the URI.
          *
