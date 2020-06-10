@@ -234,7 +234,6 @@ namespace Uri
         size_t nextIdx = 0;
         const auto userinfoDelim = authority.find("@");
         if (userinfoDelim != std::string::npos) {
-            // TODO: set userinfo
             impl_->userInfo = authority.substr(0, userinfoDelim);
             nextIdx = userinfoDelim + 1;
         }
