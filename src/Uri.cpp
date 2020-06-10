@@ -22,6 +22,11 @@ namespace Uri
         std::string scheme;
 
         /**
+         * This is the "userinfo" element of the URI.
+         */
+        std::string userInfo;
+
+        /**
          * This is the "host" element of the URI.
          */
         std::string host;
@@ -124,6 +129,11 @@ namespace Uri
         return impl_->scheme;
     }
 
+    std::string Uri::GetUserInfo() const
+    {
+        return impl_->userInfo;
+    }
+
     std::string Uri::GetHost() const
     {
         return impl_->host;
@@ -216,6 +226,7 @@ namespace Uri
 
     bool Uri::parseAuthorityComponents(const std::string& authority)
     {
+        impl_->userInfo.clear();
         impl_->host.clear();
         impl_->port = 0;
         impl_->hasPort = false;
@@ -224,6 +235,7 @@ namespace Uri
         const auto userinfoDelim = authority.find("@");
         if (userinfoDelim != std::string::npos) {
             // TODO: set userinfo
+            impl_->userInfo = authority.substr(0, userinfoDelim);
             nextIdx = userinfoDelim + 1;
         }
 

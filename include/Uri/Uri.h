@@ -61,6 +61,17 @@ namespace Uri
         std::string GetScheme() const;
 
         /**
+         * This method returns the "userinfo" element of the URI.
+         *
+         * @return
+         *      The "userinfo" element of the URI is returned.
+         *
+         * @retval ""
+         *      This is returned if there is no "userinfo" element in the URI.
+         */
+        std::string GetUserInfo() const;
+
+        /**
          * This method returns the "host" element of the URI.
          *
          * @return

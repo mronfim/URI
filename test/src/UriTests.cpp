@@ -240,3 +240,29 @@ TEST(UriTests, ParseFromStringQuery) {
         ++index;
     }
 }
+
+TEST(UriTests, ParseFromStringUserInfo) {
+    struct TestVector {
+        std::string uriString;
+        std::string userInfo;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"http://example.com/", ""},
+        {"http://matt@example.com", "matt"},
+        {"http://matt:password@example.com", "matt:password"},
+        {"/", ""}, // absolute-path reference
+        {"//example.com", ""}, // network-path reference
+        {"/foo", ""}, // absolute-path reference
+        {"foo/", ""}, // relative-path reference
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
+        ASSERT_EQ(testVector.userInfo, uri.GetUserInfo()) << index;
+        ++index;
+    }
+}
