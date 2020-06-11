@@ -195,8 +195,8 @@ namespace Uri
             return true;
         }
 
-        // Check if there is a dot-segment before the presumed scheme delimiter.
-        const auto dotSegment = uri.find("./");
+        // Check if ":" signals a scheme, or if its part of a path.
+        const auto dotSegment = uri.find("/");
         if (dotSegment != std::string::npos && dotSegment < schemeEnd) {
             // There is no scheme
             scheme = "";
@@ -253,7 +253,22 @@ namespace Uri
         size_t nextIdx = 0;
         const auto userinfoDelim = authority.find("@");
         if (userinfoDelim != std::string::npos) {
-            impl_->userInfo = authority.substr(0, userinfoDelim);
+            std::string userInfo = authority.substr(0, userinfoDelim);
+
+            // Validate UserInfo
+            std::regex re("^(?:(?=%)%[0-9A-Fa-f]{2}|[0-9A-Za-z\\-\\._~\\!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\:\\=])*$");
+            if (!std::regex_match(userInfo, re)) {
+                return false;
+            }
+
+            // Extract pct-encoded characters
+            size_t pctDelim;
+            while ((pctDelim = userInfo.find('%')) != std::string::npos) {
+                char c = (char)std::stoi(userInfo.substr(pctDelim + 1, 2), NULL, 16);
+                userInfo = userInfo.substr(0, pctDelim) + c + userInfo.substr(pctDelim + 3);
+            }
+
+            impl_->userInfo = userInfo;
             nextIdx = userinfoDelim + 1;
         }
 

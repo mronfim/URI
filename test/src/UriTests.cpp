@@ -248,13 +248,11 @@ TEST(UriTests, ParseFromStringUserInfo) {
         {"foo/", ""}, // relative-path reference
     };
 
-    size_t index = 0;
     for (const auto& testVector : testVectors) {
         Uri::Uri uri;
     
-        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << index;
-        ASSERT_EQ(testVector.userInfo, uri.GetUserInfo()) << index;
-        ++index;
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.userInfo, uri.GetUserInfo()) << "URI: " << testVector.uriString;
     }
 }
 
@@ -316,6 +314,47 @@ TEST(UriTests, ParseFromStringSchemeBarelyLegal) {
     
         ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
         ASSERT_EQ(testVector.scheme, uri.GetScheme()) << "URI: " << testVector.uriString;
+        ++index;
+    }
+}
+
+TEST(UriTests, ParseFromStringUserInfoIllegalCharacters) {
+    const std::vector<std::string> testVectors{
+        "//%X@www.example.com/",
+        "//{@www.example.com/",
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_FALSE(uri.ParseFromString(testVector)) << "URI: " << testVector;
+        ++index;
+    }
+}
+
+TEST(UriTests, ParseFromStringUserInfoBarelyLegal) {
+    struct TestVector {
+        std::string uriString;
+        std::string userInfo;
+    };
+
+    const std::vector<TestVector> testVectors{
+        {"//%41@www.example.com/", "A"},
+        {"//@www.example.com/", ""},
+        {"//!@www.example.com/", "!"},
+        {"//'@www.example.com/", "'"},
+        {"//(@www.example.com/", "("},
+        {"//;@www.example.com/", ";"},
+        {"//:@www.example.com/", ":"},
+    };
+
+    size_t index = 0;
+    for (const auto& testVector : testVectors) {
+        Uri::Uri uri;
+    
+        ASSERT_TRUE(uri.ParseFromString(testVector.uriString)) << "URI: " << testVector.uriString;
+        ASSERT_EQ(testVector.userInfo, uri.GetUserInfo()) << "URI: " << testVector.uriString;
         ++index;
     }
 }
